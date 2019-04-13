@@ -234,7 +234,7 @@ let update_file_with_block ppf t file part =
   let parts = read_parts file in
   let lines =
     match Block.value t with
-    | Raw | OCaml | Reason _ | Error _ -> t.Block.contents
+    | Raw | OCaml | Reason | Error _ -> t.Block.contents
     | Cram _ ->
       Fmt.failwith "Promoting Cram tests is unsupported for now."
     | Toplevel tests ->
@@ -333,7 +333,7 @@ let run_exn (`Setup ()) (`Non_deterministic non_deterministic)
             else err_eval ~cmd:test.command e
         ) tests
     (* Run raw OCaml code *)
-    | true, _, _, OCaml | true, _, _, Reason _ ->
+    | true, _, _, OCaml | true, _, _, Reason ->
       assert (syntax <> Some Cram);
       (match Block.file t with
        | Some ml_file ->
@@ -380,6 +380,7 @@ let report_error_in_block block msg =
     match block.Block.value with
     | Raw | Error _ -> ""
     | OCaml -> "OCaml "
+    | Reason -> "Reason "
     | Cram _ -> "cram "
     | Toplevel _ -> "toplevel "
   in
