@@ -31,20 +31,20 @@ module Asttypes_ = Asttypes
 module Parsetree_ = Parsetree
 
 include (
-  Ast_406 :
-    module type of struct
-      include Ast_406
+  Migrate_parsetree.Ast_406 :
+  module type of struct
+      include Migrate_parsetree.Ast_406
     end
-    with module Location := Ast_406.Location
-     and module Outcometree := Ast_406.Outcometree
-     and module Asttypes := Ast_406.Asttypes
-     and module Ast_helper := Ast_406.Ast_helper
-     and module Parsetree := Ast_406.Parsetree
+    with module Location := Migrate_parsetree.Ast_406.Location
+     and module Outcometree := Migrate_parsetree.Ast_406.Outcometree
+     and module Asttypes := Migrate_parsetree.Ast_406.Asttypes
+     and module Ast_helper := Migrate_parsetree.Ast_406.Ast_helper
+     and module Parsetree := Migrate_parsetree.Ast_406.Parsetree
  )
 
-module Asttypes = Ast_406.Asttypes
-module Ast_helper = Ast_406.Ast_helper
-module Parsetree = Ast_406.Parsetree
+module Asttypes = Migrate_parsetree.Ast_406.Asttypes
+module Ast_helper = Migrate_parsetree.Ast_406.Ast_helper
+module Parsetree = Migrate_parsetree.Ast_406.Parsetree
 
 module Parse = struct
   open Migrate_parsetree
@@ -75,6 +75,25 @@ end
 module Printast = struct
   open Printast
 
+#if OCAML_MAJOR = 4 && OCAML_MINOR >= 8
+  let copy_directive_argument (x : Parsetree.directive_argument) =
+    let open Migrate_parsetree.Versions.OCaml_current.Ast.Parsetree in
+    match x with
+    | Pdir_none -> None
+    | Pdir_string s -> Some ({ pdira_desc = Pdir_string s; pdira_loc = Location.none })
+    | Pdir_int (s, c) -> Some ({ pdira_desc = Pdir_int (s, c); pdira_loc = Location.none })
+    | Pdir_ident i -> Some ({ pdira_desc = Pdir_ident i; pdira_loc = Location.none })
+    | Pdir_bool b -> Some ({ pdira_desc = Pdir_bool b; pdira_loc = Location.none })
+
+  let top_phrase f (x : Parsetree.toplevel_phrase) =
+    match x with
+    | Ptop_def s ->
+       top_phrase f (Ptop_def (to_current.copy_structure s))
+    | Ptop_dir (d, a) ->
+      top_phrase f (Ptop_dir { pdir_name = Location.mknoloc d
+                             ; pdir_arg = copy_directive_argument a
+                             ; pdir_loc = Location.none})
+#else
   let copy_directive_argument (x : Parsetree.directive_argument) =
     let open Migrate_parsetree.Versions.OCaml_current.Ast.Parsetree in
     match x with
@@ -94,6 +113,8 @@ module Printast = struct
        top_phrase f (Ptop_def (to_current.copy_structure s))
     | Ptop_dir (d, a) ->
        top_phrase f (Ptop_dir (d, copy_directive_argument a))
+#endif
+
 end
 
 module Pprintast = struct
@@ -145,7 +166,7 @@ module Position = struct
 end
 
 module Location = struct
-  include Ast_406.Location
+  include Migrate_parsetree.Ast_406.Location
 
   let fmt fs {loc_start; loc_end; loc_ghost} =
     Format.fprintf fs "(%a..%a)%s" Position.fmt loc_start Position.fmt

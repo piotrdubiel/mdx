@@ -162,11 +162,11 @@ dune's `diff?` stanza:
 
 ```
 (alias
- ((name runtest)
-  (deps (file.md))
+  (name runtest)
+  (deps (:test file.md))
   (action (progn
-           (run mdx test ${<})
-           (diff? ${<} ${<}.corrected)))))
+           (run mdx test %{test})
+           (diff? %{test} %{test}.corrected))))
 ```
 
 This allows to test the consistency of a markdown file using the normal dev
@@ -294,22 +294,22 @@ The version number can be of the following forms:
 
 Environment variables can be declared at the beginning of a block:
 
-```ocaml set-FOO=bar,set-BAR=foo
-  # print_endline (Sys.getenv "FOO")
-  bar
-  - : unit = ()
-  # print_endline (Sys.getenv "BAR")
-  foo
-  - : unit = ()
-```
+    ```ocaml set-FOO=bar,set-BAR=foo
+    # print_endline (Sys.getenv "FOO")
+    bar
+    - : unit = ()
+    # print_endline (Sys.getenv "BAR")
+    foo
+    - : unit = ()
+    ```
 
 Those variables are then available in the subsequent blocks
 
-```ocaml
-  # print_endline (Sys.getenv "FOO")
-  bar
-  - : unit = ()
-```
+    ```ocaml
+    # print_endline (Sys.getenv "FOO")
+    bar
+    - : unit = ()
+    ```
 
 ### Sections
 
